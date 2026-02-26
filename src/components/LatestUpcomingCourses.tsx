@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState, type TouchEvent } from 'react';
 
 const latestCourses = [
   {
@@ -43,6 +43,8 @@ const latestCourses = [
 
 export function LatestUpcomingCourses() {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const touchStartX = useRef<number | null>(null);
+  const touchEndX = useRef<number | null>(null);
 
   const handlePrev = () => {
     setCurrentIndex((prev) => (prev > 0 ? prev - 1 : latestCourses.length - 1));
@@ -50,6 +52,34 @@ export function LatestUpcomingCourses() {
 
   const handleNext = () => {
     setCurrentIndex((prev) => (prev < latestCourses.length - 1 ? prev + 1 : 0));
+  };
+
+  const handleTouchStart = (event: TouchEvent<HTMLDivElement>) => {
+    touchStartX.current = event.changedTouches[0].clientX;
+    touchEndX.current = null;
+  };
+
+  const handleTouchMove = (event: TouchEvent<HTMLDivElement>) => {
+    touchEndX.current = event.changedTouches[0].clientX;
+  };
+
+  const handleTouchEnd = () => {
+    if (touchStartX.current === null || touchEndX.current === null) {
+      return;
+    }
+
+    const deltaX = touchStartX.current - touchEndX.current;
+    const swipeThreshold = 40;
+
+    if (Math.abs(deltaX) < swipeThreshold) {
+      return;
+    }
+
+    if (deltaX > 0) {
+      handleNext();
+    } else {
+      handlePrev();
+    }
   };
 
   return (
@@ -76,7 +106,12 @@ export function LatestUpcomingCourses() {
         </div>
 
         {/* Mobile Carousel - Single Card */}
-        <div className="relative overflow-hidden md:hidden">
+        <div
+          className="relative overflow-hidden md:hidden"
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
           <div
             className="flex transition-transform duration-500 ease-in-out"
             style={{ transform: `translateX(-${currentIndex * 100}%)` }}
