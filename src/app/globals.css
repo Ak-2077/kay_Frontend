@@ -1,0 +1,69 @@
+@import "tailwindcss";
+@import "tailwindcss/theme"; /* registers theme variables */
+@import "tailwindcss/utilities"; /* utilities use them */
+
+
+@theme{
+    --breakpoint-xss:380px;
+    --breakpoint-xs:480px;
+    --breakpoint-lxs:564px;
+    --breakpoint-smd:668px;
+    --breakpoint-lmd:852px;
+    --breakpoint-slg:924px;
+    --breakpoint-sslg:1080px;
+    --breakpoint-llg:1180px;
+    --breakpoint-xlg:1380px;
+    --breakpoint-xxl:1480px;
+
+}
+
+
+
+
+@media (min-height:500px){
+    .choose-margin{
+        margin-bottom: 860px;
+    }
+}
+
+@media (min-height:600px){
+    .choose-margin{
+        margin-bottom: 760px;
+    }
+}
+
+@media (min-height:700px){
+    .choose-margin{
+        margin-bottom: 660px;
+    }
+}
+
+@media (min-height:800px){
+    .choose-margin{
+        margin-bottom: 560px;
+    }
+}
+
+@media (min-height:900px){
+    .choose-margin{
+        margin-bottom: 460px;
+    }
+}
+
+@media (min-height:1000px){
+    .choose-margin{
+        margin-bottom: 350px;
+    }
+}
+
+@media (min-height:1100px){
+    .choose-margin{
+        margin-bottom: 250px;
+    }
+}
+
+@media (min-height:1200px){
+    .choose-margin{
+        margin-bottom: 150px;
+    }
+}
