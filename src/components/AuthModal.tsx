@@ -9,6 +9,10 @@ interface AuthModalProps {
   onClose: () => void;
 }
 
+type GoogleCredentialResponse = {
+  credential?: string;
+};
+
 export function AuthModal({ onClose }: AuthModalProps) {
   const router = useRouter();
   const { login } = useAuth();
@@ -76,9 +80,60 @@ export function AuthModal({ onClose }: AuthModalProps) {
     }
   };
 
-  const handleGoogleLogin = () => {
-    // Implement Google OAuth
-    console.log('Google login clicked');
+  const handleGoogleLogin = async () => {
+    if (loading) return;
+
+    setError('');
+
+    const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+    if (!clientId) {
+      setError('Google login is not configured. Missing NEXT_PUBLIC_GOOGLE_CLIENT_ID.');
+      return;
+    }
+
+    const google = (window as Window & { google?: any }).google;
+    if (!google?.accounts?.id) {
+      setError('Google login SDK not loaded yet. Please try again.');
+      return;
+    }
+
+    setLoading(true);
+
+    google.accounts.id.initialize({
+      client_id: clientId,
+      callback: async (response: GoogleCredentialResponse) => {
+        try {
+          if (!response?.credential) {
+            setError('Google login failed. Please try again.');
+            return;
+          }
+
+          const res = await authAPI.googleLogin({ credential: response.credential });
+
+          if (res?.token) {
+            login(res.token, res.user);
+            onClose();
+            router.push('/profile');
+            return;
+          }
+
+          setError(res?.message || 'Google login failed.');
+        } catch (err: any) {
+          setError(err?.message || 'Google login failed.');
+        } finally {
+          setLoading(false);
+        }
+      },
+      auto_select: false,
+      cancel_on_tap_outside: true,
+    });
+
+    google.accounts.id.prompt((notification: any) => {
+      if (notification?.isNotDisplayed?.() || notification?.isSkippedMoment?.()) {
+        setLoading(false);
+        setError('Google popup was not opened. Please allow popups and try again.');
+      }
+    });
   };
 
   return (
@@ -131,6 +186,7 @@ export function AuthModal({ onClose }: AuthModalProps) {
 
             <button
               onClick={handleGoogleLogin}
+              disabled={loading}
               className="flex w-full items-center justify-center gap-3 rounded-lg border border-gray-300 py-2.5 text-sm font-normal text-black transition hover:bg-gray-50"
             >
               <svg className="h-5 w-5" viewBox="0 0 24 24">
@@ -151,7 +207,7 @@ export function AuthModal({ onClose }: AuthModalProps) {
                   d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                 />
               </svg>
-              Login with Google
+              {loading ? 'Loading...' : 'Login with Google'}
             </button>
           </>
         )}
