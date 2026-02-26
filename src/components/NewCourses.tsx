@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState, type TouchEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { newCourses, type Course } from '@/data/courses';
 import { addCourseToCart } from '@/utils/cart';
@@ -8,6 +8,8 @@ import { CourseCard } from '@/styles/components/CourseCard';
 
 export function NewCourses() {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const touchStartX = useRef<number | null>(null);
+  const touchEndX = useRef<number | null>(null);
   const router = useRouter();
 
   const handlePrev = () => {
@@ -16,6 +18,34 @@ export function NewCourses() {
 
   const handleNext = () => {
     setCurrentIndex((prev) => (prev < newCourses.length - 1 ? prev + 1 : 0));
+  };
+
+  const handleTouchStart = (event: TouchEvent<HTMLDivElement>) => {
+    touchStartX.current = event.changedTouches[0].clientX;
+    touchEndX.current = null;
+  };
+
+  const handleTouchMove = (event: TouchEvent<HTMLDivElement>) => {
+    touchEndX.current = event.changedTouches[0].clientX;
+  };
+
+  const handleTouchEnd = () => {
+    if (touchStartX.current === null || touchEndX.current === null) {
+      return;
+    }
+
+    const deltaX = touchStartX.current - touchEndX.current;
+    const swipeThreshold = 40;
+
+    if (Math.abs(deltaX) < swipeThreshold) {
+      return;
+    }
+
+    if (deltaX > 0) {
+      handleNext();
+    } else {
+      handlePrev();
+    }
   };
 
   const handleAddToCart = async (course: Course) => {
@@ -52,7 +82,12 @@ export function NewCourses() {
         </div>
 
         {/* Mobile Carousel - Single Card */}
-        <div className="relative overflow-hidden md:hidden">
+        <div
+          className="relative overflow-hidden md:hidden"
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
           <div
             className="flex transition-transform duration-500 ease-in-out"
             style={{ transform: `translateX(-${currentIndex * 100}%)` }}
