@@ -202,9 +202,13 @@ export default function CheckoutPage() {
 
             if (verifyResponse?.message?.toLowerCase().includes('success') || verifyResponse?.order?.status === 'paid') {
               addPurchasedCoursesFromCart(cartItems);
-              setOrderMessage('Payment successful. Order placed.');
               const refreshedCart = await fetchCart();
               setCartItems(refreshedCart);
+              const orderCode = verifyResponse?.order?.code || '';
+              const paymentId = paymentResponse.razorpay_payment_id || verifyResponse?.order?.razorpayPaymentId || '';
+              router.push(
+                `/checkout/success?orderCode=${encodeURIComponent(orderCode)}&paymentId=${encodeURIComponent(paymentId)}`
+              );
               return;
             }
 

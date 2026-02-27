@@ -168,6 +168,7 @@ export default function ProfilePage() {
               <NavItem icon="/Dashboard.png" label="Dashboard" href="/profile" active={pathname === '/profile'} />
               <NavItem icon="/courses.png" label="Courses" href="/my-courses" active={pathname === '/my-courses'} />
               <NavItem icon="/download.png" label="Downloads" href="/my-courses" active={pathname === '/my-courses'} />
+              <NavItem icon="/invoice.png" label="Orders" href="/orders" active={pathname === '/orders'} />
               <NavItem icon="/certification.png" label="Account details" href="/account-details" active={pathname === '/account-details'} />
               <button
                 onClick={handleLogout}
@@ -219,6 +220,7 @@ export default function ProfilePage() {
                 icon="/booking.png"
                 title="My Orders and Invoices"
                 description="View and manage your orders, download invoices."
+                href="/orders"
               />
             </div>
           </div>
