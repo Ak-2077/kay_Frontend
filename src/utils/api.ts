@@ -155,7 +155,7 @@ export const orderAPI = {
     return res.json();
   },
 
-  placeOrder: async (
+  createCheckoutOrder: async (
     token: string,
     payload: {
       name?: string;
@@ -163,9 +163,29 @@ export const orderAPI = {
       billingAddress: string;
       whatsapp: string;
       paymentType: 'india' | 'international';
+    },
+    idempotencyKey: string
+  ) => {
+    const res = await fetch(`${API_URL}/api/orders/checkout/create`, {
+      method: 'POST',
+      headers: {
+        ...getAuthHeaders(token),
+        'x-idempotency-key': idempotencyKey,
+      },
+      body: JSON.stringify(payload),
+    });
+    return res.json();
+  },
+
+  verifyCheckoutPayment: async (
+    token: string,
+    payload: {
+      razorpay_order_id: string;
+      razorpay_payment_id: string;
+      razorpay_signature: string;
     }
   ) => {
-    const res = await fetch(`${API_URL}/api/orders/checkout`, {
+    const res = await fetch(`${API_URL}/api/orders/checkout/verify`, {
       method: 'POST',
       headers: getAuthHeaders(token),
       body: JSON.stringify(payload),

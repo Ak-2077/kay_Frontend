@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { type Course } from '@/data/courses';
 import { decrementCourseQuantity, fetchCart, type CartItem } from '@/utils/cart';
 import { orderAPI } from '@/utils/api';
 import { addPurchasedCoursesFromCart } from '@/utils/purchases';
@@ -14,6 +13,39 @@ type CheckoutForm = {
   billingAddress: string;
   whatsapp: string;
 };
+
+type RazorpaySuccessResponse = {
+  razorpay_order_id: string;
+  razorpay_payment_id: string;
+  razorpay_signature: string;
+};
+
+type RazorpayCheckoutOptions = {
+  key: string;
+  amount: number;
+  currency: string;
+  name: string;
+  description: string;
+  order_id: string;
+  handler: (response: RazorpaySuccessResponse) => void;
+  modal?: {
+    ondismiss?: () => void;
+  };
+  prefill?: {
+    name?: string;
+    email?: string;
+    contact?: string;
+  };
+  theme?: {
+    color?: string;
+  };
+};
+
+type RazorpayInstance = {
+  open: () => void;
+};
+
+type RazorpayConstructor = new (options: RazorpayCheckoutOptions) => RazorpayInstance;
 
 const parsePrice = (price: string) => {
   const numeric = Number(price.replace(/[^\d.]/g, ''));
@@ -27,6 +59,14 @@ const formatINR = (amount: number, decimals = 0) => {
     minimumFractionDigits: decimals,
     maximumFractionDigits: decimals,
   }).format(amount);
+};
+
+const generateIdempotencyKey = () => {
+  if (typeof window !== 'undefined' && window.crypto?.randomUUID) {
+    return window.crypto.randomUUID();
+  }
+
+  return `idem-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 };
 
 export default function CheckoutPage() {
@@ -108,25 +148,79 @@ export default function CheckoutPage() {
         return;
       }
 
-      const response = await orderAPI.placeOrder(token, {
+      const Razorpay = (window as Window & { Razorpay?: RazorpayConstructor }).Razorpay;
+      if (!Razorpay) {
+        setOrderMessage('Payment SDK failed to load. Please refresh and try again.');
+        setIsPlacingOrder(false);
+        return;
+      }
+
+      const idempotencyKey = generateIdempotencyKey();
+
+      const response = await orderAPI.createCheckoutOrder(
+        token,
+        {
         name: form.name,
         email: form.email,
         billingAddress: form.billingAddress,
         whatsapp: form.whatsapp,
         paymentType,
+        },
+        idempotencyKey
+      );
+
+      if (!response?.razorpayOrder?.id || !response?.keyId) {
+        setOrderMessage(response?.message || 'Unable to initialize payment.');
+        setIsPlacingOrder(false);
+        return;
+      }
+
+      const checkout = new Razorpay({
+        key: response.keyId,
+        amount: response.razorpayOrder.amount,
+        currency: response.razorpayOrder.currency || 'INR',
+        name: 'KAY Academy',
+        description: 'Course purchase',
+        order_id: response.razorpayOrder.id,
+        prefill: {
+          name: form.name,
+          email: form.email,
+          contact: form.whatsapp,
+        },
+        theme: {
+          color: '#000000',
+        },
+        modal: {
+          ondismiss: () => {
+            setIsPlacingOrder(false);
+            setOrderMessage('Payment was cancelled.');
+          },
+        },
+        handler: async (paymentResponse: RazorpaySuccessResponse) => {
+          try {
+            const verifyResponse = await orderAPI.verifyCheckoutPayment(token, paymentResponse);
+
+            if (verifyResponse?.message?.toLowerCase().includes('success') || verifyResponse?.order?.status === 'paid') {
+              addPurchasedCoursesFromCart(cartItems);
+              setOrderMessage('Payment successful. Order placed.');
+              const refreshedCart = await fetchCart();
+              setCartItems(refreshedCart);
+              return;
+            }
+
+            setOrderMessage(verifyResponse?.message || 'Payment verification failed.');
+          } catch {
+            setOrderMessage('Payment verification failed. Please contact support with your payment ID.');
+          } finally {
+            setIsPlacingOrder(false);
+          }
+        },
       });
 
-      if (response?.message === 'Order placed successfully.') {
-        addPurchasedCoursesFromCart(cartItems);
-        setOrderMessage('Order placed successfully.');
-        const refreshedCart = await fetchCart();
-        setCartItems(refreshedCart);
-      } else {
-        setOrderMessage(response?.message || 'Unable to place order.');
-      }
+      checkout.open();
+
     } catch {
       setOrderMessage('Unable to place order. Please try again.');
-    } finally {
       setIsPlacingOrder(false);
     }
   };
