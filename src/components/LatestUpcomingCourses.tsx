@@ -13,48 +13,9 @@ type UpcomingCourse = {
   image: string;
 };
 
-const latestCoursesFallback: UpcomingCourse[] = [
-  {
-    id: 1,
-    title: 'AI FILM DIRECTOR BOOT CAMP',
-    level: '1',
-    episode: 'five',
-    courseType: 'COURSE / GEN AI ADVERTISING',
-    // duration: '14:46MIN',
-    audio: 'HINDI + ENG CC',
-    status: 'NEW EPISODE | OUT NOW',
-    image:
-      'https://images.unsplash.com/photo-1485579149c0-123123591562?q=80&w=1200&auto=format&fit=crop',
-  },
-  {
-    id: 2,
-    title: 'CREATIVE DIRECTION BOOT CAMP',
-    level: '1',
-    episode: 'four',
-    courseType: 'COURSE / GEN AI ADVERTISING',
-    // duration: '14:23MIN',
-    audio: 'HINDI + ENG CC',
-    status: 'NEW EPISODE | OUT NOW',
-    image:
-      'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?q=80&w=1200&auto=format&fit=crop',
-  },
-  {
-    id: 3,
-    title: 'META AD STRATAGIES FOR CREATIVE',
-    level: '1',
-    episode: 'three',
-    courseType: 'COURSE / GEN AI ADVERTISING',
-    // duration: '15:16MIN',
-    audio: 'HINDI + ENG CC',
-    status: 'NEW EPISODE | OUT NOW',
-    image:
-      'https://images.unsplash.com/photo-1506157786151-b8491531f063?q=80&w=1200&auto=format&fit=crop',
-  },
-];
-
 export function LatestUpcomingCourses() {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [latestCourses, setLatestCourses] = useState<UpcomingCourse[]>(latestCoursesFallback);
+  const [latestCourses, setLatestCourses] = useState<UpcomingCourse[]>([]);
   const touchStartX = useRef<number | null>(null);
   const touchEndX = useRef<number | null>(null);
 
@@ -89,7 +50,7 @@ export function LatestUpcomingCourses() {
         }
       })
       .catch(() => {
-        setLatestCourses(latestCoursesFallback);
+        setLatestCourses([]);
       });
   }, []);
 
@@ -161,6 +122,13 @@ export function LatestUpcomingCourses() {
             </button>
           </div>
         </div>
+
+        {latestCourses.length === 0 ? (
+          <div className="rounded-lg border border-black/10 bg-[#f8f8f8] px-4 py-4 text-sm text-black/70">
+            No upcoming courses available right now. Add upcoming courses from admin portal.
+          </div>
+        ) : (
+          <>
 
         {/* Mobile Carousel - Single Card */}
         <div
@@ -273,6 +241,8 @@ export function LatestUpcomingCourses() {
             </article>
           ))}
         </div>
+          </>
+        )}
       </div>
     </section>
   );

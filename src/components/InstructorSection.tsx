@@ -25,7 +25,7 @@ export function InstructorSection() {
         <div className="mx-auto max-w-7xl md:flex md:items-start md:justify-between md:gap-12">
           <div className="md:max-w-3xl md:pt-6">
             <h2 className="mb-4 text-3xl font-light md:text-4xl">
-              Hi I'm Key
+              Hi I'm Kay
             </h2>
             <p className="max-w-3xl text-sm font-light leading-relaxed text-gray-800 md:text-base">
               Kay Sukumar is an Australian Creative Director and Brand Growth Architect with 17+ years across Australia, Europe, the US, India, and the Middle East. He blends cinematic storytelling, AI-powered production, and commercial strategy to build authority, engagement, and measurable brand growth.
