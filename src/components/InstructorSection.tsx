@@ -34,7 +34,7 @@ export function InstructorSection() {
 
           <div className="mt-10 grid grid-cols-3 gap-6 md:mt-0 md:min-w-96 md:gap-8">
             <div className="text-left">
-              <p className="text-3xl font-light text-black md:text-6l">600K+</p>
+              <p className="text-3xl font-light text-black md:text-6l">80+</p>
               <a
                 href="https://youtube.com/@kay_sukumar?si=PmIDAyduBRdte2bp"
                 target="_blank"
