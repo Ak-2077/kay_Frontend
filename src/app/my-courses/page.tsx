@@ -34,7 +34,6 @@ export default function MyCoursesPage() {
                   purchasedAt?: string;
                   paymentStatus?: 'paid';
                   videoUrl?: string;
-                  downloadUrl?: string;
                 }) => typeof course.id !== 'undefined' && typeof course.title === 'string'
               )
               .map(
@@ -45,7 +44,6 @@ export default function MyCoursesPage() {
                   purchasedAt?: string;
                   paymentStatus?: 'paid';
                   videoUrl?: string;
-                  downloadUrl?: string;
                 }) => ({
                   id: course.id,
                   title: course.title,
@@ -54,7 +52,6 @@ export default function MyCoursesPage() {
                   purchasedAt: course.purchasedAt || new Date().toISOString(),
                   paymentStatus: 'paid' as const,
                   videoUrl: course.videoUrl || '/Showreel_trim.mp4',
-                  downloadUrl: course.downloadUrl || '/Showreel_trim.mp4',
                 })
               )
           : [];
@@ -80,7 +77,7 @@ export default function MyCoursesPage() {
         <div className="mx-auto max-w-7xl">
           <h1 className="text-3xl font-light uppercase md:text-5xl">My Courses</h1>
           <p className="mt-3 text-sm font-light text-gray-700 md:text-base">
-            Access all purchased courses, watch lessons, and download available resources.
+            Access all purchased courses and watch lessons.
           </p>
         </div>
       </section>
@@ -124,13 +121,6 @@ export default function MyCoursesPage() {
                       className="rounded border border-black px-3 py-2 text-xs font-medium text-black transition hover:bg-black hover:text-white"
                     >
                       Watch Video
-                    </a>
-                    <a
-                      href={course.downloadUrl}
-                      download
-                      className="rounded border border-gray-300 px-3 py-2 text-xs font-medium text-gray-800 transition hover:bg-gray-100"
-                    >
-                      Download
                     </a>
                   </div>
                 </article>

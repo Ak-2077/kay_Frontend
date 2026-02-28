@@ -8,7 +8,6 @@ export type PurchasedCourse = {
   purchasedAt: string;
   paymentStatus: 'paid';
   videoUrl: string;
-  downloadUrl: string;
 };
 
 const PURCHASED_COURSES_KEY = 'purchased_courses';
@@ -26,8 +25,7 @@ const isPurchasedCourse = (value: unknown): value is PurchasedCourse => {
     typeof candidate.quantity === 'number' &&
     typeof candidate.purchasedAt === 'string' &&
     candidate.paymentStatus === 'paid' &&
-    typeof candidate.videoUrl === 'string' &&
-    typeof candidate.downloadUrl === 'string'
+    typeof candidate.videoUrl === 'string'
   );
 };
 
@@ -69,7 +67,6 @@ export const addPurchasedCoursesFromCart = (items: CartItem[]) => {
     purchasedAt,
     paymentStatus: 'paid',
     videoUrl: '/Showreel_trim.mp4',
-    downloadUrl: '/Showreel_trim.mp4',
   }));
 
   const mergedMap = new Map<string, PurchasedCourse>();

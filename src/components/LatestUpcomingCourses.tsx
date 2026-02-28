@@ -1,8 +1,19 @@
 'use client';
 
-import { useRef, useState, type TouchEvent } from 'react';
+import { useEffect, useRef, useState, type TouchEvent } from 'react';
 
-const latestCourses = [
+type UpcomingCourse = {
+  id: string | number;
+  title: string;
+  level: string;
+  episode: string;
+  courseType: string;
+  audio: string;
+  status: string;
+  image: string;
+};
+
+const latestCoursesFallback: UpcomingCourse[] = [
   {
     id: 1,
     title: 'AI FILM DIRECTOR BOOT CAMP',
@@ -43,15 +54,57 @@ const latestCourses = [
 
 export function LatestUpcomingCourses() {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [latestCourses, setLatestCourses] = useState<UpcomingCourse[]>(latestCoursesFallback);
   const touchStartX = useRef<number | null>(null);
   const touchEndX = useRef<number | null>(null);
 
+  const totalSlides = latestCourses.length;
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !process.env.NEXT_PUBLIC_API_URL) {
+      return;
+    }
+
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/upcoming-courses`)
+      .then((res) => res.json())
+      .then((data) => {
+        const courses = Array.isArray(data?.courses)
+          ? data.courses
+              .filter((course: Record<string, unknown>) => typeof course.title === 'string' && typeof course.image === 'string')
+              .map((course: Record<string, unknown>) => ({
+                id: String(course._id || course.id || Math.random()),
+                title: String(course.title || ''),
+                level: String(course.level || '1'),
+                episode: String(course.episode || 'one'),
+                courseType: String(course.courseType || 'COURSE / GEN AI ADVERTISING'),
+                audio: String(course.audio || 'HINDI + ENG CC'),
+                status: String(course.status || 'NEW EPISODE | OUT NOW'),
+                image: String(course.image || ''),
+              }))
+          : [];
+
+        if (courses.length > 0) {
+          setLatestCourses(courses);
+          setCurrentIndex(0);
+        }
+      })
+      .catch(() => {
+        setLatestCourses(latestCoursesFallback);
+      });
+  }, []);
+
   const handlePrev = () => {
-    setCurrentIndex((prev) => (prev > 0 ? prev - 1 : latestCourses.length - 1));
+    if (totalSlides <= 1) {
+      return;
+    }
+    setCurrentIndex((prev) => (prev > 0 ? prev - 1 : totalSlides - 1));
   };
 
   const handleNext = () => {
-    setCurrentIndex((prev) => (prev < latestCourses.length - 1 ? prev + 1 : 0));
+    if (totalSlides <= 1) {
+      return;
+    }
+    setCurrentIndex((prev) => (prev < totalSlides - 1 ? prev + 1 : 0));
   };
 
   const handleTouchStart = (event: TouchEvent<HTMLDivElement>) => {
@@ -65,6 +118,10 @@ export function LatestUpcomingCourses() {
 
   const handleTouchEnd = () => {
     if (touchStartX.current === null || touchEndX.current === null) {
+      return;
+    }
+
+    if (totalSlides <= 1) {
       return;
     }
 
