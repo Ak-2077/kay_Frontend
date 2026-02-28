@@ -298,14 +298,22 @@ export const adminAPI = {
 
   createUpcomingCourse: async (
     token: string,
-    data: FormData
+    data: {
+      title: string;
+      level?: string;
+      episode?: string;
+      courseType?: string;
+      audio?: string;
+      status?: string;
+      image: string;
+      active?: boolean;
+      sortOrder?: number;
+    }
   ) => {
     const res = await fetch(`${API_URL}/api/upcoming-courses/admin`, {
       method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      body: data,
+      headers: getAdminHeaders(token),
+      body: JSON.stringify(data),
     });
     return res.json();
   },

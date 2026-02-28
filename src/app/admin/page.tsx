@@ -50,6 +50,7 @@ export default function AdminDashboardPage() {
 
   const [upcomingForm, setUpcomingForm] = useState({
     title: '',
+    image: '',
     level: '1',
     episode: 'one',
     courseType: 'COURSE / GEN AI ADVERTISING',
@@ -57,7 +58,6 @@ export default function AdminDashboardPage() {
     status: 'NEW EPISODE | OUT NOW',
     sortOrder: '0',
   });
-  const [upcomingImageFile, setUpcomingImageFile] = useState<File | null>(null);
 
   const [extraVideo, setExtraVideo] = useState({
     courseId: '',
@@ -164,24 +164,24 @@ export default function AdminDashboardPage() {
 
     setError('');
 
-    const formData = new FormData();
-    formData.append('title', upcomingForm.title.trim());
-    formData.append('level', upcomingForm.level.trim());
-    formData.append('episode', upcomingForm.episode.trim());
-    formData.append('courseType', upcomingForm.courseType.trim());
-    formData.append('audio', upcomingForm.audio.trim());
-    formData.append('status', upcomingForm.status.trim());
-    formData.append('sortOrder', upcomingForm.sortOrder);
-    formData.append('active', 'true');
-    if (upcomingImageFile) {
-      formData.append('image', upcomingImageFile);
-    }
+    const payload = {
+      title: upcomingForm.title.trim(),
+      image: upcomingForm.image.trim(),
+      level: upcomingForm.level.trim(),
+      episode: upcomingForm.episode.trim(),
+      courseType: upcomingForm.courseType.trim(),
+      audio: upcomingForm.audio.trim(),
+      status: upcomingForm.status.trim(),
+      sortOrder: Number(upcomingForm.sortOrder),
+      active: true,
+    };
 
-    const response = await adminAPI.createUpcomingCourse(token, formData);
+    const response = await adminAPI.createUpcomingCourse(token, payload);
 
     if (response?.course?._id || response?.message?.toLowerCase().includes('created')) {
       setUpcomingForm({
         title: '',
+        image: '',
         level: '1',
         episode: 'one',
         courseType: 'COURSE / GEN AI ADVERTISING',
@@ -189,7 +189,7 @@ export default function AdminDashboardPage() {
         status: 'NEW EPISODE | OUT NOW',
         sortOrder: '0',
       });
-      setUpcomingImageFile(null);
+      // Removed the line that resets upcomingImageFile as it's no longer used
       await loadData(token);
       return;
     }
@@ -368,7 +368,7 @@ export default function AdminDashboardPage() {
             <input value={upcomingForm.courseType} onChange={(e) => setUpcomingForm((p) => ({ ...p, courseType: e.target.value }))} placeholder="Course type" className="w-full rounded-lg border border-black/20 px-3 py-2.5 text-sm" />
             <input value={upcomingForm.audio} onChange={(e) => setUpcomingForm((p) => ({ ...p, audio: e.target.value }))} placeholder="Audio" className="w-full rounded-lg border border-black/20 px-3 py-2.5 text-sm" />
             <input value={upcomingForm.status} onChange={(e) => setUpcomingForm((p) => ({ ...p, status: e.target.value }))} placeholder="Status text" className="w-full rounded-lg border border-black/20 px-3 py-2.5 text-sm" />
-            <input type="file" accept="image/*" onChange={e => setUpcomingImageFile(e.target.files?.[0] || null)} className="w-full rounded-lg border border-black/20 px-3 py-2.5 text-sm" required />
+            <input value={upcomingForm.image} onChange={e => setUpcomingForm(p => ({ ...p, image: e.target.value }))} placeholder="Image URL" className="w-full rounded-lg border border-black/20 px-3 py-2.5 text-sm" required />
             <input type="number" value={upcomingForm.sortOrder} onChange={(e) => setUpcomingForm((p) => ({ ...p, sortOrder: e.target.value }))} placeholder="Sort order" className="w-full rounded-lg border border-black/20 px-3 py-2.5 text-sm" />
             <button type="submit" className="w-full rounded-xl bg-black px-5 py-3 text-sm font-medium uppercase text-white transition hover:bg-black/80">Create Upcoming Course</button>
           </form>
