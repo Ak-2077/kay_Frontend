@@ -55,9 +55,9 @@ export default function AdminDashboardPage() {
     courseType: 'COURSE / GEN AI ADVERTISING',
     audio: 'HINDI + ENG CC',
     status: 'NEW EPISODE | OUT NOW',
-    image: '',
     sortOrder: '0',
   });
+  const [upcomingImageFile, setUpcomingImageFile] = useState<File | null>(null);
 
   const [extraVideo, setExtraVideo] = useState({
     courseId: '',
@@ -164,17 +164,20 @@ export default function AdminDashboardPage() {
 
     setError('');
 
-    const response = await adminAPI.createUpcomingCourse(token, {
-      title: upcomingForm.title.trim(),
-      level: upcomingForm.level.trim(),
-      episode: upcomingForm.episode.trim(),
-      courseType: upcomingForm.courseType.trim(),
-      audio: upcomingForm.audio.trim(),
-      status: upcomingForm.status.trim(),
-      image: upcomingForm.image.trim(),
-      sortOrder: Number(upcomingForm.sortOrder) || 0,
-      active: true,
-    });
+    const formData = new FormData();
+    formData.append('title', upcomingForm.title.trim());
+    formData.append('level', upcomingForm.level.trim());
+    formData.append('episode', upcomingForm.episode.trim());
+    formData.append('courseType', upcomingForm.courseType.trim());
+    formData.append('audio', upcomingForm.audio.trim());
+    formData.append('status', upcomingForm.status.trim());
+    formData.append('sortOrder', upcomingForm.sortOrder);
+    formData.append('active', 'true');
+    if (upcomingImageFile) {
+      formData.append('image', upcomingImageFile);
+    }
+
+    const response = await adminAPI.createUpcomingCourse(token, formData);
 
     if (response?.course?._id || response?.message?.toLowerCase().includes('created')) {
       setUpcomingForm({
@@ -184,9 +187,9 @@ export default function AdminDashboardPage() {
         courseType: 'COURSE / GEN AI ADVERTISING',
         audio: 'HINDI + ENG CC',
         status: 'NEW EPISODE | OUT NOW',
-        image: '',
         sortOrder: '0',
       });
+      setUpcomingImageFile(null);
       await loadData(token);
       return;
     }
@@ -355,7 +358,7 @@ export default function AdminDashboardPage() {
             <button type="submit" className="w-full rounded-xl bg-black px-5 py-3 text-sm font-medium uppercase text-white transition hover:bg-black/80">Create Course</button>
           </form>
 
-          <form onSubmit={handleCreateUpcomingCourse} className="rounded-2xl border border-black/10 bg-white p-5 space-y-3">
+          <form onSubmit={handleCreateUpcomingCourse} className="rounded-2xl border border-black/10 bg-white p-5 space-y-3" encType="multipart/form-data">
             <h2 className="text-xl font-medium text-black">Add Upcoming Course</h2>
             <input value={upcomingForm.title} onChange={(e) => setUpcomingForm((p) => ({ ...p, title: e.target.value }))} placeholder="Title" className="w-full rounded-lg border border-black/20 px-3 py-2.5 text-sm" required />
             <div className="grid grid-cols-2 gap-3">
@@ -365,7 +368,7 @@ export default function AdminDashboardPage() {
             <input value={upcomingForm.courseType} onChange={(e) => setUpcomingForm((p) => ({ ...p, courseType: e.target.value }))} placeholder="Course type" className="w-full rounded-lg border border-black/20 px-3 py-2.5 text-sm" />
             <input value={upcomingForm.audio} onChange={(e) => setUpcomingForm((p) => ({ ...p, audio: e.target.value }))} placeholder="Audio" className="w-full rounded-lg border border-black/20 px-3 py-2.5 text-sm" />
             <input value={upcomingForm.status} onChange={(e) => setUpcomingForm((p) => ({ ...p, status: e.target.value }))} placeholder="Status text" className="w-full rounded-lg border border-black/20 px-3 py-2.5 text-sm" />
-            <input value={upcomingForm.image} onChange={(e) => setUpcomingForm((p) => ({ ...p, image: e.target.value }))} placeholder="Image URL" className="w-full rounded-lg border border-black/20 px-3 py-2.5 text-sm" required />
+            <input type="file" accept="image/*" onChange={e => setUpcomingImageFile(e.target.files?.[0] || null)} className="w-full rounded-lg border border-black/20 px-3 py-2.5 text-sm" required />
             <input type="number" value={upcomingForm.sortOrder} onChange={(e) => setUpcomingForm((p) => ({ ...p, sortOrder: e.target.value }))} placeholder="Sort order" className="w-full rounded-lg border border-black/20 px-3 py-2.5 text-sm" />
             <button type="submit" className="w-full rounded-xl bg-black px-5 py-3 text-sm font-medium uppercase text-white transition hover:bg-black/80">Create Upcoming Course</button>
           </form>
