@@ -37,18 +37,18 @@ export default function CartPage() {
     fetchCart().then((items) => setCartItems(items));
   }, []);
 
-  const handleRemoveItem = async (courseId: number) => {
+  const handleRemoveItem = async (courseId: string | number) => {
     const updatedCart = await removeCourseFromCart(courseId);
     setCartItems(updatedCart);
   };
 
-  const handleDecrementQuantity = async (courseId: number) => {
+  const handleDecrementQuantity = async (courseId: string | number) => {
     const updatedCart = await decrementCourseQuantity(courseId);
     setCartItems(updatedCart);
   };
 
-  const handleIncrementQuantity = async (courseId: number) => {
-    const item = cartItems.find((i) => i.id === courseId);
+  const handleIncrementQuantity = async (courseId: string | number) => {
+    const item = cartItems.find((i) => String(i.id) === String(courseId));
     if (item) {
       const updatedCart = await addCourseToCart(item);
       setCartItems(updatedCart);

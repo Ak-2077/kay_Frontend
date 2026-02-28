@@ -87,7 +87,7 @@ export const cartAPI = {
 
   addItem: async (
     token: string,
-    course: { id: number; title: string; oldPrice: string; newPrice: string; status: string; image: string }
+    course: { id: string | number; title: string; oldPrice: string; newPrice: string; status: string; image: string }
   ) => {
     const res = await fetch(`${API_URL}/api/cart/add`, {
       method: 'POST',
@@ -97,7 +97,7 @@ export const cartAPI = {
     return res.json();
   },
 
-  decrementItem: async (token: string, courseId: number) => {
+  decrementItem: async (token: string, courseId: string | number) => {
     const res = await fetch(`${API_URL}/api/cart/decrement`, {
       method: 'PATCH',
       headers: getAuthHeaders(token),
@@ -106,7 +106,7 @@ export const cartAPI = {
     return res.json();
   },
 
-  removeItem: async (token: string, courseId: number) => {
+  removeItem: async (token: string, courseId: string | number) => {
     const res = await fetch(`${API_URL}/api/cart/item/${courseId}`, {
       method: 'DELETE',
       headers: getAuthHeaders(token),
@@ -125,7 +125,7 @@ export const cartAPI = {
   syncCart: async (
     token: string,
     items: Array<{
-      courseId: number;
+      courseId: string | number;
       title: string;
       oldPrice: string;
       newPrice: string;

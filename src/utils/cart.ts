@@ -40,7 +40,7 @@ const isCourse = (value: unknown): value is Course => {
 
   const candidate = value as Record<string, unknown>;
   return (
-    typeof candidate.id === 'number' &&
+    (typeof candidate.id === 'number' || typeof candidate.id === 'string') &&
     typeof candidate.title === 'string' &&
     typeof candidate.oldPrice === 'string' &&
     typeof candidate.newPrice === 'string' &&
@@ -74,8 +74,8 @@ const mapBackendItemsToCart = (items: unknown): CartItem[] => {
       const normalizedCourseId =
         typeof courseIdRaw === 'number'
           ? courseIdRaw
-          : typeof courseIdRaw === 'string' && courseIdRaw.trim() !== '' && !Number.isNaN(Number(courseIdRaw))
-            ? Number(courseIdRaw)
+          : typeof courseIdRaw === 'string' && courseIdRaw.trim() !== ''
+            ? courseIdRaw
             : null;
 
       if (
@@ -158,17 +158,17 @@ export const addCourseToCart = async (course: Course): Promise<CartItem[]> => {
   }
 
   const localCart = getLocalStoredCart();
-  const existingItem = localCart.find((item) => item.id === course.id);
+  const existingItem = localCart.find((item) => String(item.id) === String(course.id));
   const updatedCart = existingItem
     ? localCart.map((item) =>
-        item.id === course.id ? { ...item, quantity: item.quantity + 1 } : item
+        String(item.id) === String(course.id) ? { ...item, quantity: item.quantity + 1 } : item
       )
     : [...localCart, { ...course, quantity: 1 }];
   setStoredCart(updatedCart);
   return updatedCart;
 };
 
-export const removeCourseFromCart = async (courseId: number): Promise<CartItem[]> => {
+export const removeCourseFromCart = async (courseId: string | number): Promise<CartItem[]> => {
   const token = getAuthToken();
 
   if (token && shouldUseBackendCart()) {
@@ -182,12 +182,12 @@ export const removeCourseFromCart = async (courseId: number): Promise<CartItem[]
     }
   }
 
-  const updatedCart = getLocalStoredCart().filter((item) => item.id !== courseId);
+  const updatedCart = getLocalStoredCart().filter((item) => String(item.id) !== String(courseId));
   setStoredCart(updatedCart);
   return updatedCart;
 };
 
-export const decrementCourseQuantity = async (courseId: number): Promise<CartItem[]> => {
+export const decrementCourseQuantity = async (courseId: string | number): Promise<CartItem[]> => {
   const token = getAuthToken();
 
   if (token && shouldUseBackendCart()) {
@@ -202,7 +202,7 @@ export const decrementCourseQuantity = async (courseId: number): Promise<CartIte
   }
 
   const updatedCart = getLocalStoredCart()
-    .map((item) => (item.id === courseId ? { ...item, quantity: item.quantity - 1 } : item))
+    .map((item) => (String(item.id) === String(courseId) ? { ...item, quantity: item.quantity - 1 } : item))
     .filter((item) => item.quantity > 0);
   setStoredCart(updatedCart);
   return updatedCart;

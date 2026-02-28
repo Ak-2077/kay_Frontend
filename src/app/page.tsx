@@ -7,7 +7,7 @@ import { NewCourses } from '@/components/NewCourses';
 import { LatestUpcomingCourses } from '@/components/LatestUpcomingCourses';
 import { InstructorSection } from '@/components/InstructorSection';
 import { Footer } from '@/components/Footer';
-import { newCourses } from '@/data/courses';
+import { type Course } from '@/data/courses';
 import { addCourseToCart } from '@/utils/cart';
 import gsap from 'gsap';
 import { Poppins } from 'next/font/google';
@@ -20,10 +20,10 @@ const poppins = Poppins({
 export default function HomePage() {
   const heroRef = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
+  const [featuredCourse, setFeaturedCourse] = useState<Course | null>(null);
   const router = useRouter();
 
   const handleHeroEnroll = async () => {
-    const featuredCourse = newCourses[1] ?? newCourses[0];
     if (!featuredCourse) {
       return;
     }
@@ -34,6 +34,40 @@ export default function HomePage() {
 
   useEffect(() => {
     setMounted(true);
+
+    if (!process.env.NEXT_PUBLIC_API_URL) {
+      return;
+    }
+
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/courses`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (!Array.isArray(data) || data.length === 0) {
+          setFeaturedCourse(null);
+          return;
+        }
+
+        const selected = data[1] ?? data[0];
+        if (!selected || !selected._id || !selected.title || !selected.thumbnail) {
+          setFeaturedCourse(null);
+          return;
+        }
+
+        const price = Number(selected.price ?? 0);
+        const oldPrice = Number(selected.oldPrice ?? price);
+
+        setFeaturedCourse({
+          id: selected._id,
+          title: selected.title,
+          oldPrice: new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(oldPrice),
+          newPrice: new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(price),
+          status: selected.status === 'active' ? 'Live' : 'Upcoming',
+          image: selected.thumbnail,
+        });
+      })
+      .catch(() => {
+        setFeaturedCourse(null);
+      });
   }, []);
 
   useEffect(() => {

@@ -126,7 +126,7 @@ export default function CheckoutPage() {
     );
   }
 
-  const handleRemoveItem = async (courseId: number) => {
+  const handleRemoveItem = async (courseId: string | number) => {
     const updatedCart = await decrementCourseQuantity(courseId);
     setCartItems(updatedCart);
   };
