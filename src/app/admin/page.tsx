@@ -12,7 +12,7 @@ type CourseRecord = {
   title: string;
   price: number;
   thumbnail: string;
-  videos?: Array<{ title: string; url: string }>;
+  videos?: Array<{ _id?: string; title: string; url: string }>;
 };
 
 type UpcomingCourseRecord = {
@@ -63,18 +63,22 @@ export default function AdminDashboardPage() {
   });
 
   const loadData = async (adminToken: string) => {
+    setError('');
+
     try {
-      setError('');
-
-      const [coursesResponse, upcomingResponse] = await Promise.all([
-        adminAPI.getCourses(),
-        adminAPI.getUpcomingCoursesAdmin(adminToken),
-      ]);
-
+      const coursesResponse = await adminAPI.getCourses();
       setCourses(Array.isArray(coursesResponse) ? coursesResponse : []);
+    } catch {
+      setCourses([]);
+      setError('Unable to load courses.');
+    }
+
+    try {
+      const upcomingResponse = await adminAPI.getUpcomingCoursesAdmin(adminToken);
       setUpcomingCourses(Array.isArray(upcomingResponse?.courses) ? upcomingResponse.courses : []);
     } catch {
-      setError('Unable to load admin data.');
+      setUpcomingCourses([]);
+      setError('Unable to load upcoming courses.');
     }
   };
 
@@ -188,6 +192,30 @@ export default function AdminDashboardPage() {
     setError(response?.message || 'Failed to delete upcoming course.');
   };
 
+  const handleDeleteCourse = async (id: string) => {
+    if (!token) return;
+
+    const response = await adminAPI.deleteCourse(token, id);
+    if (response?.message?.toLowerCase().includes('deleted')) {
+      await loadData(token);
+      return;
+    }
+
+    setError(response?.message || 'Failed to delete course.');
+  };
+
+  const handleRemoveVideo = async (courseId: string, videoId: string) => {
+    if (!token) return;
+
+    const response = await adminAPI.removeCourseVideo(token, courseId, videoId);
+    if (response?.message?.toLowerCase().includes('removed')) {
+      await loadData(token);
+      return;
+    }
+
+    setError(response?.message || 'Failed to remove video.');
+  };
+
   const handleAddVideoToCourse = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!token) return;
@@ -290,6 +318,9 @@ export default function AdminDashboardPage() {
             <input value={extraVideo.url} onChange={(e) => setExtraVideo((p) => ({ ...p, url: e.target.value }))} placeholder="Vimeo URL" className="rounded-lg border border-black/20 px-3 py-2.5 text-sm" required />
             <button type="submit" className="rounded-xl bg-black px-5 py-3 text-sm font-medium uppercase text-white transition hover:bg-black/80">Add Video</button>
           </form>
+          {courses.length === 0 && (
+            <p className="text-xs text-black/60">No existing courses found in backend database. Create a course first above.</p>
+          )}
         </section>
 
         <section className="grid gap-6 lg:grid-cols-2">
@@ -301,9 +332,39 @@ export default function AdminDashboardPage() {
               ) : (
                 courses.map((course) => (
                   <div key={course._id} className="rounded-lg border border-black/10 px-3 py-2">
-                    <p className="font-medium text-black">{course.title}</p>
-                    <p className="text-black/70">Code: {course.code} • Price: ₹{course.price}</p>
-                    <p className="text-black/60">Videos: {course.videos?.length || 0}</p>
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <p className="font-medium text-black">{course.title}</p>
+                        <p className="text-black/70">Code: {course.code} • Price: ₹{course.price}</p>
+                        <p className="text-black/60">Videos: {course.videos?.length || 0}</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteCourse(course._id)}
+                        className="rounded border border-red-300 px-2.5 py-1 text-xs font-medium text-red-700 hover:bg-red-50"
+                      >
+                        Delete Course
+                      </button>
+                    </div>
+
+                    {course.videos && course.videos.length > 0 && (
+                      <div className="mt-2 space-y-1.5 border-t border-black/10 pt-2">
+                        {course.videos.map((video) => (
+                          <div key={String(video._id || video.url)} className="flex items-center justify-between gap-2 rounded bg-[#f8f8f8] px-2 py-1.5">
+                            <p className="truncate text-xs text-black/70">{video.title}</p>
+                            {video._id && (
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveVideo(course._id, video._id as string)}
+                                className="rounded border border-red-300 px-2 py-0.5 text-[10px] font-medium text-red-700 hover:bg-red-50"
+                              >
+                                Remove Video
+                              </button>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 ))
               )}

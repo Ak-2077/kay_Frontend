@@ -251,6 +251,22 @@ export const adminAPI = {
     return res.json();
   },
 
+  deleteCourse: async (token: string, courseId: string) => {
+    const res = await fetch(`${API_URL}/api/courses/${courseId}`, {
+      method: 'DELETE',
+      headers: getAdminHeaders(token),
+    });
+    return res.json();
+  },
+
+  removeCourseVideo: async (token: string, courseId: string, videoId: string) => {
+    const res = await fetch(`${API_URL}/api/courses/${courseId}/videos/${videoId}`, {
+      method: 'DELETE',
+      headers: getAdminHeaders(token),
+    });
+    return res.json();
+  },
+
   getUpcomingCoursesAdmin: async (token: string) => {
     const res = await fetch(`${API_URL}/api/upcoming-courses/admin`, {
       method: 'GET',
