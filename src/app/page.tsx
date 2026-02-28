@@ -152,12 +152,43 @@ export default function HomePage() {
             <p className="mx-auto mt-4 max-w-2xl text-sm font-light text-white/80 md:text-lg">
               Get direct feedback, project reviews, and personalized learning support tailored to your creative goals.
             </p>
-            <button
-              type="button"
-              className="mt-8 border border-white px-8 py-3 text-sm font-light uppercase tracking-wide transition hover:bg-white hover:text-black"
+            <form
+              action="https://api.web3forms.com/submit"
+              method="POST"
+              className="mx-auto mt-8 grid w-full max-w-2xl gap-3 text-left"
             >
-              Apply for Mentoring
-            </button>
+              <input type="hidden" name="access_key" value="f6a2c44a-ccf5-484c-86ea-ff9d8468c38b" />
+              <input type="hidden" name="subject" value="New 1:1 Mentoring Application" />
+              <input type="checkbox" name="botcheck" className="hidden" style={{ display: 'none' }} />
+
+              <input
+                type="text"
+                name="name"
+                placeholder="Your Name"
+                required
+                className="w-full border border-white/40 bg-transparent px-4 py-3 text-sm text-white placeholder:text-white/50 focus:border-white focus:outline-none"
+              />
+              <input
+                type="email"
+                name="email"
+                placeholder="Your Email"
+                required
+                className="w-full border border-white/40 bg-transparent px-4 py-3 text-sm text-white placeholder:text-white/50 focus:border-white focus:outline-none"
+              />
+              <textarea
+                name="message"
+                placeholder="Tell us about your goals"
+                rows={5}
+                required
+                className="w-full border border-white/40 bg-transparent px-4 py-3 text-sm text-white placeholder:text-white/50 focus:border-white focus:outline-none"
+              />
+              <button
+                type="submit"
+                className="mt-1 border border-white px-8 py-3 text-sm font-light uppercase tracking-wide transition hover:bg-white hover:text-black"
+              >
+                Apply for Mentoring
+              </button>
+            </form>
           </div>
         </section>
 
