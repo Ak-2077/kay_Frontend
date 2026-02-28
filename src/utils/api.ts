@@ -238,6 +238,27 @@ export const adminAPI = {
     return res.json();
   },
 
+  updateCourse: async (
+    token: string,
+    courseId: string,
+    data: {
+      code?: string;
+      title?: string;
+      description?: string;
+      price?: number;
+      oldPrice?: number;
+      thumbnail?: string;
+      status?: 'active' | 'inactive' | 'draft';
+    }
+  ) => {
+    const res = await fetch(`${API_URL}/api/courses/${courseId}`, {
+      method: 'PUT',
+      headers: getAdminHeaders(token),
+      body: JSON.stringify(data),
+    });
+    return res.json();
+  },
+
   addCourseVideo: async (
     token: string,
     courseId: string,

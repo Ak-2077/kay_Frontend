@@ -10,8 +10,11 @@ type CourseRecord = {
   _id: string;
   code: string;
   title: string;
+  description?: string;
   price: number;
+  oldPrice?: number;
   thumbnail: string;
+  status?: 'active' | 'inactive' | 'draft';
   videos?: Array<{ _id?: string; title: string; url: string }>;
 };
 
@@ -60,6 +63,17 @@ export default function AdminDashboardPage() {
     courseId: '',
     title: '',
     url: '',
+  });
+
+  const [editCourseId, setEditCourseId] = useState('');
+  const [editCourseForm, setEditCourseForm] = useState({
+    code: '',
+    title: '',
+    description: '',
+    price: '',
+    oldPrice: '',
+    thumbnail: '',
+    status: 'active' as 'active' | 'inactive' | 'draft',
   });
 
   const loadData = async (adminToken: string) => {
@@ -204,6 +218,60 @@ export default function AdminDashboardPage() {
     setError(response?.message || 'Failed to delete course.');
   };
 
+  const handleSelectCourseForEdit = (courseId: string) => {
+    setEditCourseId(courseId);
+    const selected = courses.find((course) => course._id === courseId);
+
+    if (!selected) {
+      setEditCourseForm({
+        code: '',
+        title: '',
+        description: '',
+        price: '',
+        oldPrice: '',
+        thumbnail: '',
+        status: 'active',
+      });
+      return;
+    }
+
+    setEditCourseForm({
+      code: selected.code || '',
+      title: selected.title || '',
+      description: selected.description || '',
+      price: String(selected.price ?? ''),
+      oldPrice: selected.oldPrice ? String(selected.oldPrice) : '',
+      thumbnail: selected.thumbnail || '',
+      status: selected.status || 'active',
+    });
+  };
+
+  const handleUpdateCourse = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!token || !editCourseId) return;
+
+    setError('');
+
+    const payload = {
+      code: editCourseForm.code.trim(),
+      title: editCourseForm.title.trim(),
+      description: editCourseForm.description.trim(),
+      price: Number(editCourseForm.price),
+      oldPrice: editCourseForm.oldPrice ? Number(editCourseForm.oldPrice) : undefined,
+      thumbnail: editCourseForm.thumbnail.trim(),
+      status: editCourseForm.status,
+    };
+
+    const response = await adminAPI.updateCourse(token, editCourseId, payload);
+
+    if (response?._id || response?.message?.toLowerCase().includes('updated')) {
+      await loadData(token);
+      return;
+    }
+
+    setError(response?.message || 'Failed to update course.');
+  };
+
   const handleRemoveVideo = async (courseId: string, videoId: string) => {
     if (!token) return;
 
@@ -301,6 +369,47 @@ export default function AdminDashboardPage() {
             <input type="number" value={upcomingForm.sortOrder} onChange={(e) => setUpcomingForm((p) => ({ ...p, sortOrder: e.target.value }))} placeholder="Sort order" className="w-full rounded-lg border border-black/20 px-3 py-2.5 text-sm" />
             <button type="submit" className="w-full rounded-xl bg-black px-5 py-3 text-sm font-medium uppercase text-white transition hover:bg-black/80">Create Upcoming Course</button>
           </form>
+        </section>
+
+        <section className="rounded-2xl border border-black/10 bg-white p-5 space-y-3">
+          <h2 className="text-xl font-medium text-black">Replace / Edit Landing Course</h2>
+          <form onSubmit={handleUpdateCourse} className="space-y-3">
+            <select
+              value={editCourseId}
+              onChange={(e) => handleSelectCourseForEdit(e.target.value)}
+              className="w-full rounded-lg border border-black/20 px-3 py-2.5 text-sm"
+              required
+            >
+              <option value="">Select course to edit</option>
+              {courses.map((course) => (
+                <option key={course._id} value={course._id}>
+                  {course.title}
+                </option>
+              ))}
+            </select>
+
+            <input value={editCourseForm.code} onChange={(e) => setEditCourseForm((p) => ({ ...p, code: e.target.value }))} placeholder="Course code" className="w-full rounded-lg border border-black/20 px-3 py-2.5 text-sm" required />
+            <input value={editCourseForm.title} onChange={(e) => setEditCourseForm((p) => ({ ...p, title: e.target.value }))} placeholder="Course title" className="w-full rounded-lg border border-black/20 px-3 py-2.5 text-sm" required />
+            <textarea value={editCourseForm.description} onChange={(e) => setEditCourseForm((p) => ({ ...p, description: e.target.value }))} placeholder="Course description" className="w-full min-h-20 rounded-lg border border-black/20 px-3 py-2.5 text-sm" />
+            <div className="grid grid-cols-2 gap-3">
+              <input type="number" value={editCourseForm.price} onChange={(e) => setEditCourseForm((p) => ({ ...p, price: e.target.value }))} placeholder="Price" className="w-full rounded-lg border border-black/20 px-3 py-2.5 text-sm" required />
+              <input type="number" value={editCourseForm.oldPrice} onChange={(e) => setEditCourseForm((p) => ({ ...p, oldPrice: e.target.value }))} placeholder="Old Price (optional)" className="w-full rounded-lg border border-black/20 px-3 py-2.5 text-sm" />
+            </div>
+            <input value={editCourseForm.thumbnail} onChange={(e) => setEditCourseForm((p) => ({ ...p, thumbnail: e.target.value }))} placeholder="Thumbnail URL" className="w-full rounded-lg border border-black/20 px-3 py-2.5 text-sm" required />
+            <select value={editCourseForm.status} onChange={(e) => setEditCourseForm((p) => ({ ...p, status: e.target.value as 'active' | 'inactive' | 'draft' }))} className="w-full rounded-lg border border-black/20 px-3 py-2.5 text-sm">
+              <option value="active">active (show on landing)</option>
+              <option value="inactive">inactive (hide from landing)</option>
+              <option value="draft">draft (hide from landing)</option>
+            </select>
+
+            <button type="submit" className="w-full rounded-xl bg-black px-5 py-3 text-sm font-medium uppercase text-white transition hover:bg-black/80 disabled:cursor-not-allowed disabled:opacity-50" disabled={!editCourseId}>
+              Update Course
+            </button>
+          </form>
+
+          {courses.length === 0 && (
+            <p className="text-xs text-black/60">No courses available to edit yet. Create a course first.</p>
+          )}
         </section>
 
         <section className="rounded-2xl border border-black/10 bg-white p-5 space-y-3">

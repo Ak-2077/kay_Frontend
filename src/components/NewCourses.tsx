@@ -42,12 +42,13 @@ export function NewCourses() {
         const nextCourses = Array.isArray(data)
           ? data
               .filter((course: BackendCourse) => course && course._id && course.title && course.thumbnail)
+              .filter((course: BackendCourse) => (course.status || 'active') === 'active')
               .map((course: BackendCourse) => ({
                 id: course._id,
                 title: course.title,
                 oldPrice: formatINR(Number(course.oldPrice ?? course.price ?? 0)),
                 newPrice: formatINR(Number(course.price ?? 0)),
-                status: course.status === 'active' ? 'Live' : 'Upcoming',
+                status: 'Live',
                 image: course.thumbnail,
               }))
           : [];
